@@ -106,7 +106,7 @@ def search(search_term):
     download(chosen_song - 1, data)
 
 
-with open(dir_path + '/songs_directory') as f:
+with open(dir_path + '/songs_directory.txt') as f:
     file = f.read()
     directory = file
     if(directory[len(directory)-2] != '/'):
