@@ -56,13 +56,9 @@ def download(song_number, data):
 
         if name == 'archive':
             print("Unzipping archive...")
-            try:
-                Archive(directory + folder_name + '/archive').extractall(directory + folder_name)
-                print("Cleaning up...")
-                os.remove(directory + folder_name + '/archive')
-            except:
-                print("An unknown error occurred with the unzipping process, cleaning up...")
-                shutil.rmtree(directory + folder_name)
+            Archive(os.path.join(directory, folder_name, 'archive')).extractall(directory + folder_name)
+            print("Cleaning up...")
+            os.remove(os.join(directory, folder_name, 'archive'))
 
     print("Successfully downloaded!")
     answer = input("Search for another song? y/n:\n")
@@ -106,13 +102,9 @@ def search(search_term):
     download(chosen_song - 1, data)
 
 
-with open(dir_path + '/songs_directory.txt') as f:
+with open(os.path.join(dir_path, 'songs_directory.txt')) as f:
     file = f.read()
-    directory = file
-    if(directory[len(directory)-2] != '/'):
-        directory = directory.rstrip() + '/'
-    else:
-        directory = directory.rstrip()
+    directory = file.rstrip()
 
 print("Note: Make sure that you put your clone hero songs directory in the file. This program WILL NOT work without it.\n")
 
