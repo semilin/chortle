@@ -52,7 +52,7 @@ def download(song_number, data):
         file_data = requests.get(links[x])
 
         print("Writing " + name)
-        with open(os.join(directory, folder_name, name), 'wb') as f:
+        with open(os.path.join(directory, folder_name, name), 'wb') as f:
             f.write(file_data.content)
 
         if name == 'archive':
