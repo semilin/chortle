@@ -21,19 +21,20 @@ def download(song_number, data):
     folder_name = data['songs'][song_number]['name'] + ' - ' + data['songs'][song_number]['artist']
 
     try:
-        os.mkdir(os.path.join(directory + folder_name))
+        os.mkdir(os.path.join(directory, folder_name))
     except FileExistsError:
         overwrite = input("Song already exists. Overwrite? (y/n)\n")
         if overwrite == 'y':
-            shutil.rmtree(directory + folder_name)
-            os.mkdir(os.path.join(directory + folder_name))
+            shutil.rmtree(os.path.join(directory,folder_name))
+            os.mkdir(os.path.join(directory, folder_name))
         else:
             searchPrompt()
     except PermissionError:
         print(
             "I didn't have permissions to write the file.\n "
-            "This is probably because you didn't set the correct songs folder location in the songs_directory folder.")
-        print("The current songs folder location is set to:\n" + directory)
+            "This is probably because you didn't set the correct songs folder location in the songs_directory folder."
+            "The current songs folder location is set to:\n" + directory
+        )
         quit()
 
     file_amount = len(data['songs'][song_number]['directLinks'])
@@ -51,12 +52,12 @@ def download(song_number, data):
         file_data = requests.get(links[x])
 
         print("Writing " + name)
-        with open(directory + folder_name + '/' + name, 'wb') as f:
+        with open(os.join(directory, folder_name, name), 'wb') as f:
             f.write(file_data.content)
 
         if name == 'archive':
             print("Unzipping archive...")
-            Archive(os.path.join(directory, folder_name, 'archive')).extractall(directory + folder_name)
+            Archive(os.path.join(directory, folder_name, 'archive')).extractall(os.path.join(directory, folder_name))
             print("Cleaning up...")
             os.remove(os.path.join(directory, folder_name, 'archive'))
 
