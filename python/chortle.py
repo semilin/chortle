@@ -7,7 +7,7 @@ import shutil
 url = 'https://chorus.fightthe.pw'
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-print("\n"* 100)
+print("\n" * 100)
 
 
 def searchPrompt():
@@ -30,10 +30,11 @@ def download(song_number, data):
         else:
             searchPrompt()
     except PermissionError:
-        print("I didn't have permissions to write the file.\n This is probably because you didn't set the songs folder location in the songs_directory folder.")
+        print(
+            "I didn't have permissions to write the file.\n "
+            "This is probably because you didn't set the correct songs folder location in the songs_directory folder.")
         print("The current songs folder location is set to:\n" + directory)
         quit()
-
 
     file_amount = len(data['songs'][song_number]['directLinks'])
 
@@ -49,7 +50,6 @@ def download(song_number, data):
 
         file_data = requests.get(links[x])
 
-
         print("Writing " + name)
         with open(directory + folder_name + '/' + name, 'wb') as f:
             f.write(file_data.content)
@@ -58,7 +58,7 @@ def download(song_number, data):
             print("Unzipping archive...")
             Archive(os.path.join(directory, folder_name, 'archive')).extractall(directory + folder_name)
             print("Cleaning up...")
-            os.remove(os.join(directory, folder_name, 'archive'))
+            os.remove(os.path.join(directory, folder_name, 'archive'))
 
     print("Successfully downloaded!")
     answer = input("Search for another song? y/n:\n")
@@ -76,9 +76,9 @@ def search(search_term):
     for x in range(len(data['songs'])):
         songs[x] = data['songs'][x]
 
-        print(str(x+1) + ':   ', end='')
+        print(str(x + 1) + ':   ', end='')
         print(songs[x]['name'], end='')
-        print(' ' * (50-len(songs[x]['name'])), end='')
+        print(' ' * (50 - len(songs[x]['name'])), end='')
         print(songs[x]['artist'], end='')
         print(' ' * (35 - len(songs[x]['artist'])), end='')
         print(songs[x]['charter'])
@@ -102,10 +102,23 @@ def search(search_term):
     download(chosen_song - 1, data)
 
 
-with open(os.path.join(dir_path, 'songs_directory.txt')) as f:
+# read songs directory
+with open(os.path.join(dir_path, 'songs_directory.txt'), 'r') as f:
     file = f.read()
-    directory = file.rstrip()
+    directory = file.rstrip()  # strip hidden \n
 
-print("Note: Make sure that you put your clone hero songs directory in the file. This program WILL NOT work without it.\n")
+    if (len(directory) <= 3):
+        # directory isn't set
+        print("It looks like your songs location is not set, would you like to set it right now? (y/n)\n")
 
-search(input("Type in what song you would like to search for:\n"))
+        if input() == 'y':
+            with open(os.path.join(dir_path, 'songs_directory.txt'), 'w') as f:
+                # rewrite songs directory
+                directory = str(input("Type in your songs directory:\n"))
+                f.write(directory)
+                print('\n' * 5)
+
+print("Current songs directory set to " + directory +
+      "\n If this looks incorrect, you can edit songs_directory.txt, and reload the program")
+
+searchPrompt()
