@@ -3,11 +3,12 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/olekukonko/tablewriter"
-	"os"
 	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
+
+	"github.com/olekukonko/tablewriter"
 )
 
 func main() {
@@ -55,15 +56,14 @@ func PromptDownloadSong(songs Songs) int {
 	resp := prompt("Pick a song to download (1-20) (default 1)")
 	var iresp int
 	if resp != "" {
-		iresp, err := strconv.Atoi(resp)
+		var err error
+		iresp, err = strconv.Atoi(resp)
 		HandleErr(err)
-		iresp = iresp - 1 
+		iresp-- 
 	} else {
 		iresp = 0
 	}
 
-	fmt.Println(iresp)
-	
 	return iresp
 }
 
@@ -84,9 +84,11 @@ func Message(s string) {
 
 func HandleErr(err error) string {
 	if err != nil {
-		if err == err.(*os.PathError) {
-			if !PromptFileOverwrite() {
-				return "file_exists"
+		if _, ok := err.(*os.PathError); ok {
+			if PromptFileOverwrite() {
+				return "file_exists_overwrite"
+			} else {
+				return "file_exists_keep"
 			}
 		} else if os.IsNotExist(err) {
 			PromptSongDir()
@@ -100,7 +102,8 @@ func HandleErr(err error) string {
 func prompt(s string) string {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Printf("%s: ", s)
-	resp, _ := reader.ReadString('\n')
-	resp = strings.TrimSpace(resp)
-	return resp
+	resp, err := reader.ReadString('\n')
+	HandleErr(err)
+	clean := strings.TrimSpace(resp)
+	return clean
 }

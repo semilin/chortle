@@ -1,8 +1,7 @@
 package main
 
 import (
-	"github.com/mholt/archiver"
-	"github.com/theckman/yacspin"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -10,20 +9,26 @@ import (
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/mholt/archiver"
+	"github.com/theckman/yacspin"
 )
 
 // DownloadSong downloads input song
 // to the user's song directory
 func DownloadSong(song Song) {
+	songsdir := songsDir()
 	// generate directory name with format
 	// Title - Artist (Charter)
 	dirname := song.Name + " - " + song.Artist + " (" + song.Charter + ")"
 	// create directory in
 	// the songs folder
-	err := os.Mkdir(path.Join(songsDir(), dirname), 0755)
-	if HandleErr(err) == "fileexists" {
-		os.RemoveAll(path.Join(songsDir(), dirname))
-		os.Mkdir(path.Join(songsDir(), dirname), 0755)
+	err := os.Mkdir(path.Join(songsdir, dirname), 0755)
+	if HandleErr(err) == "file_exists_overwrite" {
+		os.RemoveAll(path.Join(songsdir, dirname))
+		os.Mkdir(path.Join(songsdir, dirname), 0755)
+	} else if HandleErr(err) == "file_exists_keep" {
+		return
 	}
 
 	cfg := yacspin.Config{
@@ -95,7 +100,6 @@ func DownloadSong(song Song) {
 					ext = ".zip"
 				}
 				fn = strings.Join([]string{"archive", ext}, "")
-
 			}
 
 			spinner.Message("writing")
@@ -103,7 +107,7 @@ func DownloadSong(song Song) {
 			// Write the file from RAM
 			// to the song folder
 
-			writepath := path.Join(songsDir(), dirname, fn)
+			writepath := path.Join(songsdir, dirname, fn)
 			ioutil.WriteFile(writepath, body, 0644)
 
 			if strings.HasPrefix(fn, "archive") {
@@ -111,10 +115,12 @@ func DownloadSong(song Song) {
 				// extract it
 				spinner.Message("extracting")
 
-				writepath := path.Join(songsDir(), dirname, fn)
+				writepath := path.Join(songsdir, dirname, fn)
 
-				err := archiver.Unarchive(writepath, path.Join(songsDir(), dirname))
-				HandleErr(err)
+				err := archiver.Unarchive(writepath, path.Join(songsdir, dirname))
+				if err != nil {
+					fmt.Println("An error occurred extracting the archive file. This is likely an issue with Archiver, not Chortle. The error is: ", err)
+				}
 
 				spinner.Message("cleaning up")
 				os.Remove(writepath)
@@ -129,11 +135,11 @@ func DownloadSong(song Song) {
 }
 
 func songsDir() string {
-	file, err := os.OpenFile("./songsdir", os.O_WRONLY, 0600)
-	HandleErr(err)
-	defer file.Close()
-
-	dir, err := ioutil.ReadAll(file)
+	if _, err := os.Stat("./songsdir"); os.IsNotExist(err) {
+		PromptSongDir()
+	}
+	
+	dir, err := ioutil.ReadFile("./songsdir")
 	HandleErr(err)
 	return strings.TrimSpace(string(dir))
 }
